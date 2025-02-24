@@ -44,27 +44,33 @@
     "prepare": "simple-git-hooks"
   },
   "dependencies": {
+    "@types/bcrypt": "^5.0.2",
+    "@types/express-session": "^1.18.1",
+    "bcrypt": "^5.1.1",
+    "body-parser": "^1.20.3",
     "ejs": "^3.1.10",
     "express": "^4.21.2",
+    "express-session": "^1.18.1",
+    "sqlite": "^5.1.1",
     "sqlite3": "^5.1.7"
   },
   "devDependencies": {
-    "@antfu/eslint-config": "^3.14.0",
-    "@antfu/ni": "^23.2.0",
-    "@antfu/utils": "^8.1.0",
+    "@antfu/eslint-config": "^3.16.0",
+    "@antfu/ni": "^23.3.1",
+    "@antfu/utils": "^8.1.1",
     "@types/express": "^5.0.0",
-    "@types/node": "^22.10.6",
-    "bumpp": "^9.10.1",
-    "eslint": "^9.18.0",
-    "lint-staged": "^15.3.0",
+    "@types/node": "^22.13.5",
+    "bumpp": "^9.11.1",
+    "eslint": "^9.21.0",
+    "lint-staged": "^15.4.3",
     "nodemon": "^3.1.9",
-    "pnpm": "^9.15.4",
+    "pnpm": "^9.15.5",
     "simple-git-hooks": "^2.11.1",
-    "tsx": "^4.19.2",
+    "tsx": "^4.19.3",
     "typescript": "^5.7.3",
     "unbuild": "^3.3.1",
-    "vite": "^6.0.7",
-    "vitest": "^2.1.8"
+    "vite": "^6.1.1",
+    "vitest": "^2.1.9"
   },
   "simple-git-hooks": {
     "pre-commit": "pnpm lint-staged"

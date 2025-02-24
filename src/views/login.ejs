@@ -5,11 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login</title>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Inter', sans-serif;
         }
 
         body {
@@ -123,6 +124,12 @@
                 <p>Don't have an account? <a href="/signup">Sign up</a></p>
             </div>
         </form>
+
+        <div id="message" style="color: red; text-align: center; margin-top: 1rem;">
+            <% if (message) { %>
+                <%= message %>
+            <% } %>
+        </div>   
     </div>
 </body>
 </html>
