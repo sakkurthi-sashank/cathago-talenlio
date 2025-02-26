@@ -340,3 +340,15 @@ header svg {
   .upload-btn:hover {
     background-color: #333;
   }
+
+  .sidebar ul li a {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+    padding: 8px 16px;
+  }
+
+  .sidebar ul li a:hover {
+    background-color: #f0f0f0;
+    border-radius: 4px;
+  }
