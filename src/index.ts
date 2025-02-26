@@ -3,7 +3,6 @@ import type { Store } from 'express-session'
 import type { Database } from 'sqlite'
 import fs from 'node:fs'
 import path from 'node:path'
-
 import { fileURLToPath } from 'node:url'
 import bcrypt from 'bcrypt'
 import SQLiteStoreFactory from 'connect-sqlite3'
@@ -37,23 +36,81 @@ app.use(session({
 app.set('view engine', 'ejs')
 app.set('views', path.join(__dirname, 'views'))
 
-async function deductCredit(userId: number): Promise<boolean> {
-  const db = await initDb()
-  const user = await db.get('SELECT credits FROM users WHERE id = ?', [userId])
-  if (user && user.credits > 0) {
-    await db.run('UPDATE users SET credits = credits - 1 WHERE id = ?', [userId])
-    await db.close()
-    return true
-  }
-  await db.close()
-  return false
+async function initDb(): Promise<Database> {
+  const db = await open({ filename: 'database.db', driver: sqlite3.Database })
+
+  await db.exec(`
+    CREATE TABLE IF NOT EXISTS users (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      firstname TEXT NOT NULL,
+      lastname TEXT NOT NULL,
+      email TEXT UNIQUE NOT NULL,
+      password TEXT NOT NULL,
+      credits INTEGER DEFAULT 20,
+      role TEXT DEFAULT 'user' CHECK (role IN ('user', 'admin'))
+    )
+  `)
+
+  await db.exec(`
+    CREATE TABLE IF NOT EXISTS files (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL,
+      filename TEXT NOT NULL,
+      content TEXT NOT NULL,
+      mimetype TEXT NOT NULL,
+      size INTEGER NOT NULL,
+      uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    )
+  `)
+
+  await db.exec(`
+    CREATE TABLE IF NOT EXISTS matches (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      file1_id INTEGER NOT NULL,
+      file2_id INTEGER NOT NULL,
+      similarity_score REAL NOT NULL,
+      FOREIGN KEY (file1_id) REFERENCES files(id) ON DELETE CASCADE,
+      FOREIGN KEY (file2_id) REFERENCES files(id) ON DELETE CASCADE
+    );
+  `)
+
+  await db.exec(`
+    CREATE TABLE IF NOT EXISTS credit_requests (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL,
+      credits_requested INTEGER NOT NULL,
+      reason TEXT NOT NULL,
+      status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'denied')),
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      processed_at TIMESTAMP,
+      processed_by INTEGER,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+      FOREIGN KEY (processed_by) REFERENCES users(id)
+    );
+  `)
+
+  await db.exec(`
+    CREATE TABLE IF NOT EXISTS scan_statistics (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL,
+      scan_date DATE DEFAULT CURRENT_DATE,
+      scan_count INTEGER DEFAULT 0,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+      UNIQUE(user_id, scan_date)
+    );
+  `)
+
+  return db
 }
 
-cron.schedule('0 0 * * *', async () => {
-  const db = await initDb()
-  await db.run('UPDATE users SET credits = 20')
-  await db.close()
-})
+async function hashPassword(password: string): Promise<string> {
+  return await bcrypt.hash(password, 10)
+}
+
+async function comparePassword(password: string, hashedPassword: string): Promise<boolean> {
+  return await bcrypt.compare(password, hashedPassword)
+}
 
 function levenshtein(a: string, b: string): number {
   const dp: number[][] = Array.from({ length: a.length + 1 })
@@ -112,60 +169,72 @@ function calculateSimilarity(text1: string, text2: string): number {
   return (levScore + cosineScore) / 2
 }
 
-async function initDb(): Promise<Database> {
-  const db = await open({ filename: 'database.db', driver: sqlite3.Database })
-
-  await db.exec(`
-    CREATE TABLE IF NOT EXISTS users (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      firstname TEXT NOT NULL,
-      lastname TEXT NOT NULL,
-      email TEXT UNIQUE NOT NULL,
-      password TEXT NOT NULL,
-      credits INTEGER DEFAULT 20
-    )
-  `)
-
-  await db.exec(`
-    CREATE TABLE IF NOT EXISTS files (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      user_id INTEGER NOT NULL,
-      filename TEXT NOT NULL,
-      content TEXT NOT NULL,
-      mimetype TEXT NOT NULL,
-      size INTEGER NOT NULL,
-      uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-    )
-  `)
-
-  await db.exec(`
-    CREATE TABLE IF NOT EXISTS matches (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  file1_id INTEGER NOT NULL,
-  file2_id INTEGER NOT NULL,
-  similarity_score REAL NOT NULL,
-  FOREIGN KEY (file1_id) REFERENCES files(id) ON DELETE CASCADE,
-  FOREIGN KEY (file2_id) REFERENCES files(id) ON DELETE CASCADE
-);
-  `)
-
-  return db
-}
-
-async function hashPassword(password: string): Promise<string> {
-  return await bcrypt.hash(password, 10)
-}
-
-async function comparePassword(password: string, hashedPassword: string): Promise<boolean> {
-  return await bcrypt.compare(password, hashedPassword)
-}
-
 function isAuthenticated(req: Request, res: Response, next: NextFunction): void {
   if (req.session.user)
     return next()
   res.redirect('/login')
 }
+
+async function isAdmin(req: Request, res: Response, next: NextFunction): void {
+  const db = await initDb()
+
+  if (!req.session.user) {
+    res.status(401).send('Unauthorized')
+    return
+  }
+
+  const user = await db.get('SELECT role FROM users WHERE id = ?', [req.session.user?.id])
+
+  if (user && user.role === 'admin')
+    return next()
+  res.status(403).send('Access denied')
+}
+
+async function deductCredit(userId: number): Promise<boolean> {
+  const db = await initDb()
+  const user = await db.get('SELECT credits FROM users WHERE id = ?', [userId])
+  if (user && user.credits > 0) {
+    await db.run('UPDATE users SET credits = credits - 1 WHERE id = ?', [userId])
+    await db.close()
+    return true
+  }
+  await db.close()
+  return false
+}
+
+async function updateScanStatistics(userId: number): Promise<void> {
+  const db = await initDb()
+  try {
+    // Try to update existing record
+    const result = await db.run(
+      `UPDATE scan_statistics 
+       SET scan_count = scan_count + 1 
+       WHERE user_id = ? AND scan_date = CURRENT_DATE`,
+      [userId],
+    )
+
+    // If no record exists, create one
+    if (result.changes === 0) {
+      await db.run(
+        `INSERT INTO scan_statistics (user_id, scan_count) 
+         VALUES (?, 1)`,
+        [userId],
+      )
+    }
+  }
+  catch (error) {
+    console.error('Error updating scan statistics:', error)
+  }
+  finally {
+    await db.close()
+  }
+}
+
+cron.schedule('0 0 * * *', async () => {
+  const db = await initDb()
+  await db.run('UPDATE users SET credits = 20')
+  await db.close()
+})
 
 app.get('/login', (req, res) => res.render('login', { message: null, title: 'Login' }))
 
@@ -198,7 +267,14 @@ app.post('/login', async (req, res) => {
   try {
     const user = await db.get('SELECT * FROM users WHERE email = ?', [email])
     if (user && await comparePassword(password, user.password)) {
-      req.session.user = { id: user.id, email: user.email, firstname: user.firstname, lastname: user.lastname }
+      req.session.user = {
+        id: user.id,
+        email: user.email,
+        firstname: user.firstname,
+        lastname: user.lastname,
+        role: user.role,
+        credits: user.credits,
+      }
       res.redirect('/')
     }
     else {
@@ -226,7 +302,84 @@ app.get('/logout', (req, res) => {
   })
 })
 
-app.get('/', isAuthenticated, (req, res) => res.render('layout', { user: req.session.user, title: 'Dashboard', body: 'dashboard' }))
+app.get('/', isAuthenticated, async (req, res) => {
+  const db = await initDb()
+  try {
+    if (req.session.user) {
+      const userInfo = await db.get('SELECT credits FROM users WHERE id = ?', [req.session.user.id])
+      if (userInfo) {
+        req.session.user.credits = userInfo.credits
+      }
+    }
+
+    res.render('dashboard', {
+      user: req.session.user,
+    })
+  }
+  catch (error) {
+    console.error(error)
+    res.status(500).send('Error loading dashboard')
+  }
+  finally {
+    await db.close()
+  }
+})
+
+app.get('/profile', isAuthenticated, async (req, res) => {
+  const db = await initDb()
+  try {
+    const userId = req.session.user?.id
+
+    const userFiles = await db.all(
+      'SELECT * FROM files WHERE user_id = ? ORDER BY uploaded_at DESC',
+      [userId],
+    )
+
+    const creditRequests = await db.all(
+      'SELECT * FROM credit_requests WHERE user_id = ? ORDER BY created_at DESC',
+      [userId],
+    )
+
+    const userInfo = await db.get('SELECT * FROM users WHERE id = ?', [userId])
+    if (userInfo && req.session.user) {
+      req.session.user.credits = userInfo.credits
+    }
+
+    res.render('profile', {
+      user: req.session.user,
+      files: userFiles,
+      creditRequests,
+    })
+  }
+  catch (error) {
+    console.error(error)
+    res.status(500).send('Error loading profile')
+  }
+  finally {
+    await db.close()
+  }
+})
+
+app.get('/scans', isAuthenticated, async (req, res) => {
+  const db = await initDb()
+  try {
+    const userId = req.session.user?.id
+
+    const userFiles = await db.all(
+      'SELECT * FROM files WHERE user_id = ? ORDER BY uploaded_at DESC',
+      [userId],
+    )
+
+    res.json(userFiles)
+  }
+  catch (error) {
+    console.error(error)
+    res.status(500).send('Error loading scans')
+  }
+  finally {
+    await db.close()
+  }
+})
 
 app.get('/scans/:id', isAuthenticated, async (req, res) => {
   const db = await initDb()
@@ -247,7 +400,7 @@ app.get('/scans/:id', isAuthenticated, async (req, res) => {
     [fileId, fileId, fileId],
   )
 
-  res.render('layout', { user: req.session.user, file, matches, title: 'Scan', body: 'scan' })
+  res.render('scan', { user: req.session.user, file, matches })
 })
 
 app.post('/upload', isAuthenticated, upload.single('file'), async (req, res) => {
@@ -257,7 +410,7 @@ app.post('/upload', isAuthenticated, upload.single('file'), async (req, res) => 
   if (!file) { res.status(400).json({ error: 'No file uploaded.' }); return }
 
   if (req.session.user && !(await deductCredit(req.session.user.id))) {
-    res.status(403).json({ error: 'Daily upload limit reached. Try again tomorrow.' })
+    res.status(403).json({ error: 'Daily upload limit reached. Try again tomorrow or request more credits.' })
     return
   }
 
@@ -282,6 +435,10 @@ app.post('/upload', isAuthenticated, upload.single('file'), async (req, res) => 
       'INSERT INTO files (user_id, filename, content, mimetype, size) VALUES (?, ?, ?, ?, ?)',
       [req?.session?.user?.id, file.originalname, extractedText, file.mimetype, file.size],
     )
+
+    if (req.session.user) {
+      await updateScanStatistics(req.session.user.id)
+    }
 
     fs.unlinkSync(filePath)
 
@@ -330,6 +487,225 @@ app.post('/compare/:id', isAuthenticated, async (req, res) => {
   catch (error) {
     console.error(error)
     res.status(500).json({ error: 'Error processing document comparison' })
+  }
+  finally {
+    await db.close()
+  }
+})
+
+app.get('/credits/history', isAuthenticated, async (req, res) => {
+  const db = await initDb()
+
+  try {
+    const userId = req.session.user?.id
+    const creditRequests = await db.all('SELECT * FROM credit_requests WHERE user_id = ? ORDER BY created_at DESC', [userId])
+
+    res.json(creditRequests)
+  }
+  catch (error) {
+    console.error(error)
+    res.status(500).send('Error loading credit history')
+  }
+  finally {
+    await db.close()
+  }
+})
+
+app.post('/credits/request', isAuthenticated, async (req, res) => {
+  const { creditsRequested, reason } = req.body
+  const userId = req.session.user?.id
+
+  if (!userId || !creditsRequested || !reason) {
+    res.status(400).json({ error: 'Missing required fields' })
+    return
+  }
+
+  const db = await initDb()
+  try {
+    await db.run(
+      'INSERT INTO credit_requests (user_id, credits_requested, reason) VALUES (?, ?, ?)',
+      [userId, creditsRequested, reason],
+    )
+    res.status(200).json({ message: 'Credit request submitted successfully' })
+  }
+  catch (error) {
+    console.error(error)
+    res.status(500).json({ error: 'Error submitting credit request' })
+  }
+  finally {
+    await db.close()
+  }
+})
+
+app.get('/admin/credit-requests', isAuthenticated, isAdmin, async (req, res) => {
+  const db = await initDb()
+  try {
+    const requests = await db.all(`
+      SELECT cr.*, u.firstname, u.lastname, u.email 
+      FROM credit_requests cr
+      JOIN users u ON cr.user_id = u.id
+      WHERE cr.status = 'pending'
+      ORDER BY cr.created_at DESC
+    `)
+
+    res.render('credit-requests', {
+      user: req.session.user,
+      requests,
+    })
+  }
+  catch (error) {
+    console.error(error)
+    res.status(500).send('Error loading credit requests')
+  }
+  finally {
+    await db.close()
+  }
+})
+
+app.post('/admin/credit-requests/:id', isAuthenticated, isAdmin, async (req, res) => {
+  const { id } = req.params
+  const { action } = req.body
+  const adminId = req.session.user?.id
+
+  if (!['approve', 'deny'].includes(action)) {
+    res.status(400).json({ error: 'Invalid action' })
+    return
+  }
+
+  const db = await initDb()
+  try {
+    const request = await db.get('SELECT * FROM credit_requests WHERE id = ?', [id])
+    if (!request) {
+      res.status(404).json({ error: 'Request not found' })
+      return
+    }
+
+    await db.run(
+      'UPDATE credit_requests SET status = ?, processed_at = CURRENT_TIMESTAMP, processed_by = ? WHERE id = ?',
+      [action === 'approve' ? 'approved' : 'denied', adminId, id],
+    )
+
+    if (action === 'approve') {
+      await db.run(
+        'UPDATE users SET credits = credits + ? WHERE id = ?',
+        [request.credits_requested, request.user_id],
+      )
+    }
+
+    res.status(200).json({ message: `Request ${action === 'approve' ? 'approved' : 'denied'} successfully` })
+  }
+  catch (error) {
+    console.error(error)
+    res.status(500).json({ error: `Error ${action === 'approve' ? 'approving' : 'denying'} request` })
+  }
+  finally {
+    await db.close()
+  }
+})
+
+app.get('/admin/user-management', isAuthenticated, isAdmin, async (req, res) => {
+  const db = await initDb()
+  try {
+    const users = await db.all('SELECT id, firstname, lastname, email, credits, role FROM users')
+
+    res.render('admin-dashboard', {
+      user: req.session.user,
+      users,
+    })
+  }
+  catch (error) {
+    console.error(error)
+    res.status(500).send('Error loading users')
+  }
+  finally {
+    await db.close()
+  }
+})
+
+app.post('/admin/user/:id/credits', isAuthenticated, isAdmin, async (req, res) => {
+  const { id } = req.params
+  const { credits } = req.body
+
+  if (!credits) {
+    res.status(400).json({ error: 'Credits amount is required' })
+    return
+  }
+
+  const db = await initDb()
+  try {
+    await db.run('UPDATE users SET credits = ? WHERE id = ?', [credits, id])
+    res.status(200).json({ message: 'Credits updated successfully' })
+  }
+  catch (error) {
+    console.error(error)
+    res.status(500).json({ error: 'Error updating credits' })
+  }
+  finally {
+    await db.close()
+  }
+})
+
+app.post('/admin/user/:id/role', isAuthenticated, isAdmin, async (req, res) => {
+  const { id } = req.params
+  const { role } = req.body
+
+  if (!role || !['user', 'admin'].includes(role)) {
+    res.status(400).json({ error: 'Valid role is required' })
+    return
+  }
+
+  const db = await initDb()
+  try {
+    await db.run('UPDATE users SET role = ? WHERE id = ?', [role, id])
+    res.status(200).json({ message: 'Role updated successfully' })
+  }
+  catch (error) {
+    console.error(error)
+    res.status(500).json({ error: 'Error updating role' })
+  }
+  finally {
+    await db.close()
+  }
+})
+
+app.get('/admin/analytics', isAuthenticated, isAdmin, async (req, res) => {
+  const db = await initDb()
+  try {
+    const topUsers = await db.all(`
+      SELECT u.id, u.firstname, u.lastname, COUNT(f.id) as scan_count
+      FROM users u
+      LEFT JOIN files f ON u.id = f.user_id
+      GROUP BY u.id
+      ORDER BY scan_count DESC
+      LIMIT 10
+    `)
+
+    const dailyStats = await db.all(`
+      SELECT scan_date, SUM(scan_count) as total_scans
+      FROM scan_statistics
+      GROUP BY scan_date
+      ORDER BY scan_date DESC
+      LIMIT 30
+    `)
+
+    const creditStats = await db.all(`
+      SELECT u.id, u.firstname, u.lastname, u.credits, 
+             (SELECT COUNT(*) FROM credit_requests cr WHERE cr.user_id = u.id) as request_count
+      FROM users u
+      ORDER BY request_count DESC
+      LIMIT 10
+    `)
+
+    res.render('admin-analytics', {
+      user: req.session.user,
+      topUsers,
+      dailyStats,
+      creditStats,
+    })
+  }
+  catch (error) {
+    console.error(error)
+    res.status(500).send('Error loading analytics')
   }
   finally {
     await db.close()

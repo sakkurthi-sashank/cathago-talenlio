@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - User Management</title>
+    <link rel="stylesheet" href="/css/admin-dashboard.css">
+</head>
+<body>
+  <style>
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f7f8fc;
+    color: #333;
+    line-height: 1.6;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+h1 {
+    margin-bottom: 20px;
+    color: #333;
+}
+
+.card {
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    margin-bottom: 20px;
+    overflow: hidden;
+}
+
+.card-header {
+    padding: 15px 20px;
+    border-bottom: 1px solid #eee;
+}
+
+.card-header h2 {
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.card-content {
+    padding: 20px;
+    overflow-x: auto;
+}
+
+.user-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.user-table th,
+.user-table td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+}
+
+.user-table th {
+    font-weight: 600;
+    color: #555;
+    background-color: #f9f9f9;
+}
+
+.user-table tbody tr:hover {
+    background-color: #f8f9fd;
+}
+
+.role {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.role.admin {
+    background-color: #e3f2fd;
+    color: #1976d2;
+}
+
+.role.user {
+    background-color: #e8f5e9;
+    color: #43a047;
+}
+
+.credits {
+    font-weight: 500;
+}
+
+.actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.role-select {
+    padding: 6px 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background-color: #fff;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.btn-update {
+    padding: 6px 12px;
+    background-color: #4a6da7;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.2s;
+}
+
+.btn-update:hover {
+    background-color: #385790;
+}
+
+@media (max-width: 768px) {
+    .actions {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 5px;
+    }
+    
+    .user-table {
+        font-size: 14px;
+    }
+    
+    .card-content {
+        padding: 10px;
+    }
+}
+</style>
+    <div class="container">
+        <h1>User Management</h1>
+        
+        <div class="card">
+            <div class="card-header">
+                <h2>All Users</h2>
+            </div>
+            <div class="card-content">
+                <table class="user-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Credits</th>
+                            <th>Role</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% users.forEach(user => { %>
+                            <tr>
+                                <td><%= user.id %></td>
+                                <td><%= user.firstname %> <%= user.lastname %></td>
+                                <td><%= user.email %></td>
+                                <td>
+                                    <span class="credits"><%= user.credits %></span>
+                                </td>
+                                <td>
+                                    <span class="role <%= user.role %>"><%= user.role %></span>
+                                </td>
+                                <td>
+                                    <div class="actions">
+                                        <select id="role-<%= user.id %>" class="role-select">
+                                            <option value="user" <%= user.role === 'user' ? 'selected' : '' %>>User</option>
+                                            <option value="admin" <%= user.role === 'admin' ? 'selected' : '' %>>Admin</option>
+                                        </select>
+                                        <button onclick="updateUserRole(<%= user.id %>)" class="btn-update">Update Role</button>
+                                    </div>
+                                </td>
+                            </tr>
+                        <% }); %>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function updateUserRole(userId) {
+            const roleSelect = document.getElementById(`role-${userId}`);
+            const newRole = roleSelect.value;
+            
+            fetch(`/admin/user/${userId}/role`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ role: newRole }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.message) {
+                    alert(data.message);
+                    // Update the role display without refreshing
+                    const roleSpan = roleSelect.closest('tr').querySelector('.role');
+                    roleSpan.textContent = newRole;
+                    roleSpan.className = `role ${newRole}`;
+                } else {
+                    alert('Error: ' + (data.error || 'Unknown error'));
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Failed to update role. Please try again.');
+            });
+        }
+    </script>
+</body>
+</html>

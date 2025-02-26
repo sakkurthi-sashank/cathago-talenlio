@@ -1,0 +1,291 @@
+<!-- views/credit-requests.ejs -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Credit Requests - Admin</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f5f7fa;
+      color: #333;
+    }
+    
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #ddd;
+    }
+    
+    .header h1 {
+      margin: 0;
+      color: #2c3e50;
+    }
+    
+    .user-info {
+      display: flex;
+      align-items: center;
+    }
+    
+    .user-info span {
+      margin-right: 15px;
+    }
+    
+    .user-info .credits {
+      background-color: #3498db;
+      color: white;
+      padding: 5px 10px;
+      border-radius: 4px;
+    }
+    
+    .card {
+      background-color: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      margin-bottom: 20px;
+      overflow: hidden;
+    }
+    
+    .card-header {
+      background-color: #f8f9fa;
+      padding: 15px 20px;
+      border-bottom: 1px solid #eee;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .card-header h2 {
+      margin: 0;
+      font-size: 18px;
+      color: #2c3e50;
+    }
+    
+    .card-body {
+      padding: 20px;
+    }
+    
+    .breadcrumb {
+      margin-bottom: 20px;
+    }
+    
+    .breadcrumb a {
+      color: #3498db;
+      text-decoration: none;
+    }
+    
+    .breadcrumb span {
+      margin: 0 5px;
+      color: #777;
+    }
+    
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    
+    table th, table td {
+      padding: 12px 15px;
+      text-align: left;
+      border-bottom: 1px solid #eee;
+    }
+    
+    table th {
+      background-color: #f8f9fa;
+      font-weight: 600;
+      color: #2c3e50;
+    }
+    
+    table tr:hover {
+      background-color: #f5f7fa;
+    }
+    
+    .btn {
+      padding: 8px 12px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: background-color 0.3s;
+    }
+    
+    .btn-primary {
+      background-color: #3498db;
+      color: white;
+    }
+    
+    .btn-success {
+      background-color: #2ecc71;
+      color: white;
+    }
+    
+    .btn-danger {
+      background-color: #e74c3c;
+      color: white;
+    }
+    
+    .btn:hover {
+      opacity: 0.9;
+    }
+    
+    .status-badge {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    
+    .status-pending {
+      background-color: #f39c12;
+      color: white;
+    }
+    
+    .status-approved {
+      background-color: #2ecc71;
+      color: white;
+    }
+    
+    .status-denied {
+      background-color: #e74c3c;
+      color: white;
+    }
+    
+    .actions {
+      display: flex;
+      gap: 8px;
+    }
+    
+    .empty-state {
+      text-align: center;
+      padding: 40px 0;
+      color: #777;
+    }
+    
+    .empty-state p {
+      margin-top: 10px;
+      font-size: 16px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>Credit Requests</h1>
+      <div class="user-info">
+        <span>Welcome, <%= user.firstname %> <%= user.lastname %></span>
+        <span class="credits">Credits: <%= user.credits %></span>
+        <a href="/admin" class="btn btn-primary">Dashboard</a>
+        <a href="/logout" class="btn btn-danger">Logout</a>
+      </div>
+    </div>
+    
+    <div class="breadcrumb">
+      <a href="/admin">Admin Dashboard</a>
+      <span>></span>
+      <span>Credit Requests</span>
+    </div>
+    
+    <div class="card">
+      <div class="card-header">
+        <h2>Pending Credit Requests</h2>
+      </div>
+      <div class="card-body">
+        <% if (requests && requests.length > 0) { %>
+          <table>
+            <thead>
+              <tr>
+                <th>User</th>
+                <th>Credits Requested</th>
+                <th>Reason</th>
+                <th>Date</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% requests.forEach(request => { %>
+                <tr>
+                  <td><%= request.firstname %> <%= request.lastname %> (<%= request.email %>)</td>
+                  <td><%= request.credits_requested %></td>
+                  <td><%= request.reason %></td>
+                  <td><%= new Date(request.created_at).toLocaleString() %></td>
+                  <td>
+                    <span class="status-badge status-<%= request.status %>"><%= request.status %></span>
+                  </td>
+                  <td>
+                    <div class="actions">
+                      <button class="btn btn-success approve-btn" data-id="<%= request.id %>">Approve</button>
+                      <button class="btn btn-danger deny-btn" data-id="<%= request.id %>">Deny</button>
+                    </div>
+                  </td>
+                </tr>
+              <% }); %>
+            </tbody>
+          </table>
+        <% } else { %>
+          <div class="empty-state">
+            <p>No pending credit requests at this time.</p>
+          </div>
+        <% } %>
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Handle approve button clicks
+      document.querySelectorAll('.approve-btn').forEach(button => {
+        button.addEventListener('click', function() {
+          const requestId = this.getAttribute('data-id');
+          processRequest(requestId, 'approve');
+        });
+      });
+      
+      // Handle deny button clicks
+      document.querySelectorAll('.deny-btn').forEach(button => {
+        button.addEventListener('click', function() {
+          const requestId = this.getAttribute('data-id');
+          processRequest(requestId, 'deny');
+        });
+      });
+      
+      // Process credit request (approve/deny)
+      function processRequest(requestId, action) {
+        fetch(`/admin/credit-requests/${requestId}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ action })
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.message) {
+            // Reload the page to show updated requests
+            window.location.reload();
+          } else {
+            alert(`Error: ${data.error || 'Unknown error occurred'}`);
+          }
+        })
+        .catch(error => {
+          console.error('Error processing request:', error);
+          alert('An error occurred while processing the request.');
+        });
+      }
+    });
+  </script>
+</body>
+</html>

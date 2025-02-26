@@ -1,42 +1,384 @@
-<%- include('./partials/head') %>
-   <div class="container">
-       <div class="form-header">
-           <h1>Create Account</h1>
-           <p>Please fill in the information below</p>
-       </div>
-       <form action="/signup" method="POST">
-           <div class="name-fields">
-               <div class="form-group">
-                   <label for="firstName">First Name</label>
-                   <input type="text" id="firstname" name="firstname" placeholder="Enter first name" required>
-               </div>
-               <div class="form-group">
-                   <label for="lastName">Last Name</label>
-                   <input type="text" id="lastname" name="lastname" placeholder="Enter last name" required>
-               </div>
-           </div>
-           <div class="form-group">
-               <label for="email">Email Address</label>
-               <input type="email" id="email" name="email" placeholder="Enter your email" required>
-           </div>
-           <div class="form-group">
-               <label for="password">Password</label>
-               <input type="password" id="password" name="password" placeholder="Create a password" required>
-           </div>
-           <div class="form-group">
-               <label for="confirmPassword">Confirm Password</label>
-               <input type="password" id="confirmPassword" name="confirmPassword" placeholder="Confirm your password" required>
-           </div>
-           <button type="submit" class="signup-btn">Create Account</button>
-           <div class="alternative-action">
-               <p>Already have an account? <a href="/login">Login</a></p>
-           </div>
-       </form>
-
-       <div id="message" style="color: red; text-align: center; margin-top: 1rem;">
-           <% if (message) { %>
-               <%= message %>
-           <% } %>
-       </div>        
-   </div>
-   <%- include('./partials/footer') %>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign Up | Document Scanner</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    
+    body {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    
+    .container {
+      background-color: white;
+      border-radius: 10px;
+      box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+      width: 100%;
+      max-width: 500px;
+      overflow: hidden;
+      padding: 40px;
+    }
+    
+    .header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    
+    .header h1 {
+      color: #333;
+      font-size: 2rem;
+      margin-bottom: 10px;
+    }
+    
+    .header p {
+      color: #666;
+      font-size: 0.9rem;
+    }
+    
+    .form-group {
+      margin-bottom: 20px;
+    }
+    
+    .form-row {
+      display: flex;
+      gap: 15px;
+    }
+    
+    .form-row .form-group {
+      flex: 1;
+    }
+    
+    .form-group label {
+      display: block;
+      color: #555;
+      margin-bottom: 8px;
+      font-weight: 500;
+      font-size: 0.9rem;
+    }
+    
+    .form-group input {
+      width: 100%;
+      padding: 12px 15px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 1rem;
+      transition: border 0.3s;
+    }
+    
+    .form-group input:focus {
+      border-color: #667eea;
+      outline: none;
+    }
+    
+    .btn {
+      background: linear-gradient(to right, #667eea, #764ba2);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      padding: 12px 15px;
+      width: 100%;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+    }
+    
+    .btn:active {
+      transform: translateY(1px);
+    }
+    
+    .link {
+      text-align: center;
+      margin-top: 20px;
+      font-size: 0.9rem;
+      color: #666;
+    }
+    
+    .link a {
+      color: #667eea;
+      text-decoration: none;
+      font-weight: 600;
+    }
+    
+    .link a:hover {
+      text-decoration: underline;
+    }
+    
+    .error-message {
+      background-color: #ffe5e5;
+      color: #e74c3c;
+      padding: 12px;
+      border-radius: 6px;
+      margin-bottom: 20px;
+      font-size: 0.9rem;
+      display: <%= message ? 'block' : 'none' %>;
+    }
+    
+    .password-wrapper {
+      position: relative;
+    }
+    
+    .toggle-password {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      cursor: pointer;
+      color: #888;
+      font-size: 0.9rem;
+      user-select: none;
+    }
+    
+    .password-strength {
+      height: 5px;
+      margin-top: 8px;
+      border-radius: 3px;
+      transition: all 0.3s;
+    }
+    
+    .requirements {
+      margin-top: 8px;
+      font-size: 0.8rem;
+      color: #666;
+    }
+    
+    .requirement {
+      display: flex;
+      align-items: center;
+      margin-bottom: 4px;
+    }
+    
+    .requirement.valid:before {
+      content: "✓";
+      color: #2ecc71;
+      margin-right: 5px;
+    }
+    
+    .requirement.invalid:before {
+      content: "✗";
+      color: #e74c3c;
+      margin-right: 5px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>Create Account</h1>
+      <p>Join the document scanner platform</p>
+    </div>
+    
+    <div class="error-message" id="error-message">
+      <%= message %>
+    </div>
+    
+    <form action="/signup" method="POST" id="signup-form">
+      <div class="form-row">
+        <div class="form-group">
+          <label for="firstname">First Name</label>
+          <input type="text" id="firstname" name="firstname" placeholder="Enter your first name" required>
+        </div>
+        
+        <div class="form-group">
+          <label for="lastname">Last Name</label>
+          <input type="text" id="lastname" name="lastname" placeholder="Enter your last name" required>
+        </div>
+      </div>
+      
+      <div class="form-group">
+        <label for="email">Email Address</label>
+        <input type="email" id="email" name="email" placeholder="Enter your email" required>
+      </div>
+      
+      <div class="form-group">
+        <label for="password">Password</label>
+        <div class="password-wrapper">
+          <input type="password" id="password" name="password" placeholder="Enter your password" required>
+          <span class="toggle-password" id="toggle-password">Show</span>
+        </div>
+        <div class="password-strength" id="password-strength"></div>
+        <div class="requirements" id="password-requirements">
+          <div class="requirement invalid" id="length">At least 8 characters</div>
+          <div class="requirement invalid" id="uppercase">Contains uppercase letter</div>
+          <div class="requirement invalid" id="lowercase">Contains lowercase letter</div>
+          <div class="requirement invalid" id="number">Contains number</div>
+        </div>
+      </div>
+      
+      <div class="form-group">
+        <label for="confirmPassword">Confirm Password</label>
+        <div class="password-wrapper">
+          <input type="password" id="confirmPassword" name="confirmPassword" placeholder="Confirm your password" required>
+          <span class="toggle-password" id="toggle-confirm">Show</span>
+        </div>
+      </div>
+      
+      <button type="submit" class="btn" id="submit-btn" disabled>Create Account</button>
+    </form>
+    
+    <div class="link">
+      Already have an account? <a href="/login">Sign In</a>
+    </div>
+  </div>
+  
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const togglePassword = document.getElementById('toggle-password');
+      const toggleConfirm = document.getElementById('toggle-confirm');
+      const passwordField = document.getElementById('password');
+      const confirmField = document.getElementById('confirmPassword');
+      
+      togglePassword.addEventListener('click', function() {
+        toggleVisibility(passwordField, togglePassword);
+      });
+      
+      toggleConfirm.addEventListener('click', function() {
+        toggleVisibility(confirmField, toggleConfirm);
+      });
+      
+      function toggleVisibility(field, toggle) {
+        if (field.type === 'password') {
+          field.type = 'text';
+          toggle.textContent = 'Hide';
+        } else {
+          field.type = 'password';
+          toggle.textContent = 'Show';
+        }
+      }
+      
+    
+      const passwordStrength = document.getElementById('password-strength');
+      const lengthReq = document.getElementById('length');
+      const uppercaseReq = document.getElementById('uppercase');
+      const lowercaseReq = document.getElementById('lowercase');
+      const numberReq = document.getElementById('number');
+      const submitBtn = document.getElementById('submit-btn');
+      
+      passwordField.addEventListener('input', function() {
+        const password = passwordField.value;
+        let strength = 0;
+        
+        if (password.length >= 8) {
+          strength += 25;
+          lengthReq.classList.remove('invalid');
+          lengthReq.classList.add('valid');
+        } else {
+          lengthReq.classList.remove('valid');
+          lengthReq.classList.add('invalid');
+        }
+        
+        // Check uppercase
+        if (/[A-Z]/.test(password)) {
+          strength += 25;
+          uppercaseReq.classList.remove('invalid');
+          uppercaseReq.classList.add('valid');
+        } else {
+          uppercaseReq.classList.remove('valid');
+          uppercaseReq.classList.add('invalid');
+        }
+        
+        // Check lowercase
+        if (/[a-z]/.test(password)) {
+          strength += 25;
+          lowercaseReq.classList.remove('invalid');
+          lowercaseReq.classList.add('valid');
+        } else {
+          lowercaseReq.classList.remove('valid');
+          lowercaseReq.classList.add('invalid');
+        }
+        
+        // Check number
+        if (/[0-9]/.test(password)) {
+          strength += 25;
+          numberReq.classList.remove('invalid');
+          numberReq.classList.add('valid');
+        } else {
+          numberReq.classList.remove('valid');
+          numberReq.classList.add('invalid');
+        }
+        
+        // Update strength meter
+        passwordStrength.style.width = strength + '%';
+        
+        if (strength < 25) {
+          passwordStrength.style.backgroundColor = '#e74c3c'; // red
+        } else if (strength < 50) {
+          passwordStrength.style.backgroundColor = '#e67e22'; // orange
+        } else if (strength < 75) {
+          passwordStrength.style.backgroundColor = '#f1c40f'; // yellow
+        } else {
+          passwordStrength.style.backgroundColor = '#2ecc71'; // green
+        }
+        
+        // Check if all requirements are met
+        const allValid = password.length >= 8 && 
+                         /[A-Z]/.test(password) && 
+                         /[a-z]/.test(password) && 
+                         /[0-9]/.test(password);
+        
+        submitBtn.disabled = !allValid;
+      });
+      
+      // Form validation
+      const signupForm = document.getElementById('signup-form');
+      const emailField = document.getElementById('email');
+      const firstnameField = document.getElementById('firstname');
+      const lastnameField = document.getElementById('lastname');
+      const errorMessage = document.getElementById('error-message');
+      
+      signupForm.addEventListener('submit', function(e) {
+        let isValid = true;
+        
+        // Basic email validation
+        if (!isValidEmail(emailField.value)) {
+          showError('Please enter a valid email address');
+          isValid = false;
+        }
+        
+        // Name validation
+        if (firstnameField.value.length < 2 || lastnameField.value.length < 2) {
+          showError('Names must be at least 2 characters long');
+          isValid = false;
+        }
+        
+        // Password match validation
+        if (passwordField.value !== confirmField.value) {
+          showError('Passwords do not match');
+          isValid = false;
+        }
+        
+        if (!isValid) {
+          e.preventDefault();
+        }
+      });
+      
+      function isValidEmail(email) {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return emailRegex.test(email);
+      }
+      
+      function showError(message) {
+        errorMessage.textContent = message;
+        errorMessage.style.display = 'block';
+      }
+    });
+  </script>
+</body>
+</html>

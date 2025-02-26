@@ -1,22 +1,809 @@
-<div class="upload-container">
-  <div id="dropzone" class="dropzone">
-    <svg xmlns="http://www.w3.org/2000/svg" class="icon" viewBox="0 0 20 20" fill="currentColor">
-      <path d="M8 16a1 1 0 001 1h2a1 1 0 001-1V9h3l-4-4-4 4h3v7z" />
-      <path d="M3 18a2 2 0 002 2h10a2 2 0 002-2v-5h-2v5H5v-5H3v5z" />
-    </svg>
-    <p class="dropzone-text">
-      <strong>Drag and drop a file or click to browse</strong><br>
-      PDF, image, video, or audio
-    </p>
-    <input id="fileInput" type="file" class="hidden-input" />
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PlagiarismCheck - Dashboard</title>
+  <style>
+    :root {
+      --primary-color: #4a6fa5;
+      --primary-dark: #3a5a8c;
+      --secondary-color: #6c757d;
+      --success-color: #28a745;
+      --danger-color: #dc3545;
+      --light-gray: #f4f6f9;
+      --dark-gray: #343a40;
+      --border-color: #dee2e6;
+      --shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    }
+    
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    
+    body {
+      background-color: var(--light-gray);
+      color: #333;
+      line-height: 1.6;
+    }
+    
+    .container {
+      width: 100%;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 1rem;
+    }
+    
+    .navbar {
+      background-color: white;
+      box-shadow: var(--shadow);
+      padding: 0.75rem 0;
+      margin-bottom: 1.5rem;
+    }
+    
+    .navbar-content {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .logo {
+      font-size: 1.5rem;
+      font-weight: bold;
+      color: var(--primary-color);
+      text-decoration: none;
+    }
+    
+    .nav-menu {
+      display: flex;
+      gap: 1.5rem;
+      list-style: none;
+    }
+    
+    .nav-link {
+      color: var(--secondary-color);
+      text-decoration: none;
+      font-weight: 500;
+      transition: color 0.2s;
+    }
+    
+    .nav-link:hover {
+      color: var(--primary-color);
+    }
+    
+    .credits-badge {
+      background-color: var(--primary-color);
+      color: white;
+      border-radius: 50rem;
+      padding: 0.25rem 0.75rem;
+      font-size: 0.875rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    
+    .btn {
+      display: inline-block;
+      font-weight: 500;
+      text-align: center;
+      white-space: nowrap;
+      vertical-align: middle;
+      user-select: none;
+      border: 1px solid transparent;
+      padding: 0.375rem 0.75rem;
+      font-size: 1rem;
+      line-height: 1.5;
+      border-radius: 0.25rem;
+      transition: all 0.2s;
+      cursor: pointer;
+    }
+    
+    .btn-primary {
+      color: white;
+      background-color: var(--primary-color);
+      border-color: var(--primary-color);
+    }
+    
+    .btn-primary:hover {
+      background-color: var(--primary-dark);
+      border-color: var(--primary-dark);
+    }
+    
+    .btn-danger {
+      color: white;
+      background-color: var(--danger-color);
+      border-color: var(--danger-color);
+    }
+    
+    .btn-danger:hover {
+      background-color: #bd2130;
+      border-color: #bd2130;
+    }
+    
+    .btn-success {
+      color: white;
+      background-color: var(--success-color);
+      border-color: var(--success-color);
+    }
+    
+    .btn-success:hover {
+      background-color: #218838;
+      border-color: #1e7e34;
+    }
+    
+    .card {
+      background-color: white;
+      border-radius: 0.25rem;
+      box-shadow: var(--shadow);
+      margin-bottom: 1.5rem;
+    }
+    
+    .card-header {
+      padding: 1rem;
+      border-bottom: 1px solid var(--border-color);
+      font-weight: 600;
+      background-color: rgba(0, 0, 0, 0.03);
+    }
+    
+    .card-body {
+      padding: 1.5rem;
+    }
+    
+    .table-container {
+      overflow-x: auto;
+    }
+    
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    
+    th, td {
+      padding: 0.75rem;
+      text-align: left;
+      border-bottom: 1px solid var(--border-color);
+    }
+    
+    th {
+      background-color: rgba(0, 0, 0, 0.03);
+      font-weight: 600;
+    }
+    
+    tr:hover {
+      background-color: rgba(0, 0, 0, 0.02);
+    }
+    
+    .upload-area {
+      border: 2px dashed var(--border-color);
+      border-radius: 0.25rem;
+      padding: 2rem;
+      text-align: center;
+      transition: border-color 0.2s;
+      margin-bottom: 1rem;
+      background-color: rgba(0, 0, 0, 0.01);
+    }
+    
+    .upload-area.highlight {
+      border-color: var(--primary-color);
+    }
+    
+    .upload-icon {
+      font-size: 3rem;
+      color: var(--secondary-color);
+      margin-bottom: 1rem;
+    }
+    
+    .file-input {
+      display: none;
+    }
+    
+    .progress-container {
+      margin-top: 1rem;
+      display: none;
+    }
+    
+    .progress {
+      height: 0.75rem;
+      background-color: var(--light-gray);
+      border-radius: 0.25rem;
+      overflow: hidden;
+    }
+    
+    .progress-bar {
+      height: 100%;
+      background-color: var(--primary-color);
+      width: 0%;
+      transition: width 0.3s;
+    }
+    
+    .alert {
+      padding: 0.75rem 1.25rem;
+      margin-bottom: 1rem;
+      border: 1px solid transparent;
+      border-radius: 0.25rem;
+    }
+    
+    .alert-success {
+      color: #155724;
+      background-color: #d4edda;
+      border-color: #c3e6cb;
+    }
+    
+    .alert-danger {
+      color: #721c24;
+      background-color: #f8d7da;
+      border-color: #f5c6cb;
+    }
+    
+    /* Modal Styles */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background-color: rgba(0, 0, 0, 0.5);
+    }
+    
+    .modal-content {
+      position: relative;
+      background-color: white;
+      margin: 10% auto;
+      padding: 0;
+      border-radius: 0.25rem;
+      width: 90%;
+      max-width: 600px;
+      box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    }
+    
+    .modal-header {
+      padding: 1rem;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    
+    .modal-title {
+      margin: 0;
+      font-size: 1.25rem;
+    }
+    
+    .close {
+      color: var(--secondary-color);
+      font-size: 1.5rem;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    
+    .close:hover {
+      color: black;
+    }
+    
+    .modal-body {
+      padding: 1rem;
+    }
+    
+    .modal-footer {
+      padding: 1rem;
+      border-top: 1px solid var(--border-color);
+      display: flex;
+      justify-content: flex-end;
+      gap: 0.5rem;
+    }
+    
+    .form-group {
+      margin-bottom: 1rem;
+    }
+    
+    .form-label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: 500;
+    }
+    
+    .form-control {
+      display: block;
+      width: 100%;
+      padding: 0.375rem 0.75rem;
+      font-size: 1rem;
+      line-height: 1.5;
+      color: #495057;
+      background-color: white;
+      border: 1px solid var(--border-color);
+      border-radius: 0.25rem;
+      transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+    }
+    
+    .form-control:focus {
+      border-color: var(--primary-color);
+      outline: 0;
+      box-shadow: 0 0 0 0.2rem rgba(74, 111, 165, 0.25);
+    }
+    
+    textarea.form-control {
+      resize: vertical;
+      min-height: 100px;
+    }
+    
+    .status-pending {
+      color: #856404;
+      background-color: #fff3cd;
+      padding: 0.25rem 0.5rem;
+      border-radius: 0.25rem;
+      font-size: 0.875rem;
+    }
+    
+    .status-approved {
+      color: #155724;
+      background-color: #d4edda;
+      padding: 0.25rem 0.5rem;
+      border-radius: 0.25rem;
+      font-size: 0.875rem;
+    }
+    
+    .status-denied {
+      color: #721c24;
+      background-color: #f8d7da;
+      padding: 0.25rem 0.5rem;
+      border-radius: 0.25rem;
+      font-size: 0.875rem;
+    }
+    
+    @media (max-width: 768px) {
+      .navbar-content {
+        flex-direction: column;
+        gap: 1rem;
+      }
+      
+      .nav-menu {
+        flex-direction: column;
+        width: 100%;
+        text-align: center;
+        gap: 0.5rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <nav class="navbar">
+    <div class="container navbar-content">
+      <a href="/" class="logo"></a>
+      <ul class="nav-menu">
+        <li><a href="/" class="nav-link">Dashboard</a></li>
+        <li><a href="/profile" class="nav-link">Profile</a></li>
+        <li><a href="/logout" class="nav-link">Logout</a></li>
+        <li>
+          <div class="credits-badge">
+            <span>Credits:</span>
+            <span id="user-credits"><%= user.credits %></span>
+            <button class="btn btn-primary" id="request-credits-btn" style="font-size: 0.75rem; padding: 0.125rem 0.375rem;">Request More</button>
+          </div>
+        </li>
+      </ul>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div class="card">
+      <div class="card-header">
+        Upload Document for Checking
+      </div>
+      <div class="card-body">
+        <div id="upload-area" class="upload-area">
+          <div class="upload-icon">📄</div>
+          <h3>Drag & Drop Files Here</h3>
+          <p>or</p>
+          <input type="file" id="file-input" class="file-input" accept=".txt,.pdf">
+          <button class="btn btn-primary" id="browse-files-btn">Browse Files</button>
+          <div class="progress-container" id="progress-container">
+            <div class="progress">
+              <div class="progress-bar" id="progress-bar"></div>
+            </div>
+            <p id="progress-text">Uploading... 0%</p>
+          </div>
+        </div>
+        <div id="upload-alert" class="alert" style="display: none;"></div>
+        <div id="file-info" style="display: none;">
+          <h4>Selected File</h4>
+          <p><strong>Name:</strong> <span id="file-name"></span></p>
+          <p><strong>Size:</strong> <span id="file-size"></span></p>
+          <p><strong>Type:</strong> <span id="file-type"></span></p>
+          <button class="btn btn-primary" id="upload-btn">Upload & Check</button>
+          <button class="btn btn-danger" id="cancel-btn">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        Previous Scans
+      </div>
+      <div class="card-body">
+        <div class="table-container">
+          <table id="scan-history-table">
+            <thead>
+              <tr>
+                <th>File Name</th>
+                <th>File Type</th>
+                <th>Size</th>
+                <th>Uploaded At</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="scan-history-body">
+              <!-- This will be populated with JavaScript -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
   </div>
 
-  <div class="file-input-group">
-    <label for="file" class="file-label">File</label>
-    <input id="fileSelect" type="file" class="file-select" />
+  <!-- Request Credits Modal -->
+  <div id="request-credits-modal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title">Request Additional Credits</h2>
+        <span class="close" id="close-modal">&times;</span>
+      </div>
+      <div class="modal-body">
+        <form id="credits-request-form">
+          <div class="form-group">
+            <label for="credits-amount" class="form-label">Number of Credits Requested</label>
+            <input type="number" id="credits-amount" name="creditsRequested" class="form-control" min="1" max="100" required>
+          </div>
+          <div class="form-group">
+            <label for="credits-reason" class="form-label">Reason for Request</label>
+            <textarea id="credits-reason" name="reason" class="form-control" required></textarea>
+          </div>
+        </form>
+        
+        <div id="past-requests-section" style="margin-top: 2rem;">
+          <h3>Past Requests</h3>
+          <div class="table-container">
+            <table id="past-requests-table">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Credits</th>
+                  <th>Reason</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="past-requests-body">
+                <!-- Will be populated with JavaScript -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-danger" id="cancel-request">Cancel</button>
+        <button type="button" class="btn btn-primary" id="submit-request">Submit Request</button>
+      </div>
+    </div>
   </div>
 
-  <button id="uploadBtn" class="upload-btn">Upload</button>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Upload area functionality
+      const uploadArea = document.getElementById('upload-area');
+      const fileInput = document.getElementById('file-input');
+      const browseBtn = document.getElementById('browse-files-btn');
+      const uploadBtn = document.getElementById('upload-btn');
+      const cancelBtn = document.getElementById('cancel-btn');
+      const fileName = document.getElementById('file-name');
+      const fileSize = document.getElementById('file-size');
+      const fileType = document.getElementById('file-type');
+      const fileInfo = document.getElementById('file-info');
+      const progressContainer = document.getElementById('progress-container');
+      const progressBar = document.getElementById('progress-bar');
+      const progressText = document.getElementById('progress-text');
+      const uploadAlert = document.getElementById('upload-alert');
+      
+      const formatFileSize = (bytes) => {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+      };
+      
+      // Drag and drop functionality
+      ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        uploadArea.addEventListener(eventName, preventDefaults, false);
+      });
+      
+      function preventDefaults(e) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+      
+      ['dragenter', 'dragover'].forEach(eventName => {
+        uploadArea.addEventListener(eventName, highlight, false);
+      });
+      
+      ['dragleave', 'drop'].forEach(eventName => {
+        uploadArea.addEventListener(eventName, unhighlight, false);
+      });
+      
+      function highlight() {
+        uploadArea.classList.add('highlight');
+      }
+      
+      function unhighlight() {
+        uploadArea.classList.remove('highlight');
+      }
+      
+      uploadArea.addEventListener('drop', handleDrop, false);
+      
+      function handleDrop(e) {
+        const dt = e.dataTransfer;
+        const files = dt.files;
+        if (files.length) {
+          handleFiles(files[0]);
+        }
+      }
+      
+      browseBtn.addEventListener('click', () => {
+        fileInput.click();
+      });
+      
+      fileInput.addEventListener('change', (e) => {
+        if (e.target.files.length) {
+          handleFiles(e.target.files[0]);
+        }
+      });
+      
+      function handleFiles(file) {
+        displayFileInfo(file);
+      }
+      
+      function displayFileInfo(file) {
+        fileName.textContent = file.name;
+        fileSize.textContent = formatFileSize(file.size);
+        fileType.textContent = file.type || 'Unknown';
+        fileInfo.style.display = 'block';
+        
+        // Store the file for later upload
+        uploadBtn.file = file;
+      }
+      
+      uploadBtn.addEventListener('click', () => {
+        const file = uploadBtn.file;
+        if (!file) return;
+        
+        uploadFile(file);
+      });
+      
+      cancelBtn.addEventListener('click', () => {
+        resetUploadForm();
+      });
+      
+      function resetUploadForm() {
+        fileInput.value = '';
+        fileInfo.style.display = 'none';
+        uploadBtn.file = null;
+        progressContainer.style.display = 'none';
+        progressBar.style.width = '0%';
+        progressText.textContent = 'Uploading... 0%';
+        uploadAlert.style.display = 'none';
+      }
+      
+      function uploadFile(file) {
+        const formData = new FormData();
+        formData.append('file', file);
+        
+        const xhr = new XMLHttpRequest();
+        
+        xhr.open('POST', '/upload', true);
+        
+        xhr.upload.onprogress = (e) => {
+          if (e.lengthComputable) {
+            const percentComplete = Math.round((e.loaded / e.total) * 100);
+            progressBar.style.width = percentComplete + '%';
+            progressText.textContent = `Uploading... ${percentComplete}%`;
+          }
+        };
+        
+        xhr.onloadstart = () => {
+          progressContainer.style.display = 'block';
+        };
+        
+        xhr.onload = () => {
+          if (xhr.status === 200) {
+            try {
+              const response = JSON.parse(xhr.responseText);
+              showAlert('success', 'File uploaded successfully! Running comparison...');
+              compareDocuments(response.fileId);
+            } catch (error) {
+              showAlert('danger', 'Error processing server response.');
+            }
+          } else {
+            try {
+              const response = JSON.parse(xhr.responseText);
+              showAlert('danger', response.error || 'Upload failed. Please try again.');
+            } catch {
+              showAlert('danger', 'Upload failed. Please try again.');
+            }
+          }
+        };
+        
+        xhr.onerror = () => {
+          showAlert('danger', 'Network error occurred. Please try again.');
+        };
+        
+        xhr.send(formData);
+      }
+      
+      function showAlert(type, message) {
+        uploadAlert.className = 'alert alert-' + type;
+        uploadAlert.textContent = message;
+        uploadAlert.style.display = 'block';
+      }
+      
+      function compareDocuments(fileId) {
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', `/compare/${fileId}`, true);
+        xhr.setRequestHeader('Content-Type', 'application/json');
+        
+        xhr.onload = () => {
+          if (xhr.status === 200) {
+            try {
+              const response = JSON.parse(xhr.responseText);
+              showAlert('success', 'Comparison complete!');
+              setTimeout(() => {
+                window.location.href = `/scans/${fileId}`;
+              }, 1000);
+            } catch (error) {
+              showAlert('danger', 'Error processing comparison response.');
+            }
+          } else {
+            showAlert('danger', 'Error during comparison. Please try again.');
+          }
+        };
+        
+        xhr.onerror = () => {
+          showAlert('danger', 'Network error during comparison. Please try again.');
+        };
+        
+        xhr.send(JSON.stringify({}));
+      }
+      
+      async function displayScanHistory() {
+        const tbody = document.getElementById('scan-history-body');
+        tbody.innerHTML = '';
+        
+        const response = await fetch('/scans');
+        const files = await response.json();
+        
+        const filesToDisplay = files
+        
+        filesToDisplay.forEach(file => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>${file.filename}</td>
+            <td>${file.mimetype}</td>
+            <td>${formatFileSize(file.size)}</td>
+            <td>${new Date(file.uploaded_at).toLocaleString()}</td>
+            <td>
+              <a href="/scans/${file.id}" class="btn btn-primary" style="font-size: 0.875rem; padding: 0.25rem 0.5rem;">View Results</a>
+            </td>
+          `;
+          tbody.appendChild(tr);
+        });
+      }
+      
+      // Initialize scan history
+      displayScanHistory();
+      
+      // Request Credits Modal
+      const requestCreditsBtn = document.getElementById('request-credits-btn');
+      const requestCreditsModal = document.getElementById('request-credits-modal');
+      const closeModal = document.getElementById('close-modal');
+      const cancelRequest = document.getElementById('cancel-request');
+      const submitRequest = document.getElementById('submit-request');
+      const creditsRequestForm = document.getElementById('credits-request-form');
+      const pastRequestsBody = document.getElementById('past-requests-body');
+      
+      requestCreditsBtn.addEventListener('click', () => {
+        requestCreditsModal.style.display = 'block';
+        loadPastRequests();
+      });
+      
+      closeModal.addEventListener('click', () => {
+        requestCreditsModal.style.display = 'none';
+      });
+      
+      cancelRequest.addEventListener('click', () => {
+        requestCreditsModal.style.display = 'none';
+      });
+      
+      window.addEventListener('click', (e) => {
+        if (e.target === requestCreditsModal) {
+          requestCreditsModal.style.display = 'none';
+        }
+      });
+      
+      submitRequest.addEventListener('click', () => {
+        const formData = new FormData(creditsRequestForm);
+        const creditsRequested = formData.get('creditsRequested');
+        const reason = formData.get('reason');
+        
+        if (!creditsRequested || !reason) {
+          alert('Please fill out all fields.');
+          return;
+        }
+        
+        const requestData = {
+          creditsRequested,
+          reason
+        };
+        
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', '/credits/request', true);
+        xhr.setRequestHeader('Content-Type', 'application/json');
+        
+        xhr.onload = () => {
+          if (xhr.status === 200) {
+            alert('Credit request submitted successfully!');
+            creditsRequestForm.reset();
+            requestCreditsModal.style.display = 'none';
+            loadPastRequests();
+          } else {
+            try {
+              const response = JSON.parse(xhr.responseText);
+              alert(response.error || 'Error submitting request. Please try again.');
+            } catch {
+              alert('Error submitting request. Please try again.');
+            }
+          }
+        };
+        
+        xhr.onerror = () => {
+          alert('Network error occurred. Please try again.');
+        };
+        
+        xhr.send(JSON.stringify(requestData));
+      });
+      
+      async function loadPastRequests() {
 
-  <button id="scanBtn" class="scan-btn" style="display: none;">🔍 Scan for Similar Documents</button>
-</div>
+        const response = await fetch('/credits/history')
+        const requests = await response.json();
+        
+        displayPastRequests(requests);
+      }
+      
+      function displayPastRequests(requests) {
+        pastRequestsBody.innerHTML = '';
+        
+        requests.forEach(request => {
+          const tr = document.createElement('tr');
+          
+          const statusClass = 
+            request.status === 'pending' ? 'status-pending' :
+            request.status === 'approved' ? 'status-approved' :
+            'status-denied';
+          
+          tr.innerHTML = `
+            <td>${new Date(request.created_at).toLocaleString()}</td>
+            <td>${request.credits_requested}</td>
+            <td>${request.reason}</td>
+            <td><span class="${statusClass}">${request.status.charAt(0).toUpperCase() + request.status.slice(1)}</span></td>
+          `;
+          
+          pastRequestsBody.appendChild(tr);
+        });
+      }
+    });
+  </script>
+</body>
+</html>
