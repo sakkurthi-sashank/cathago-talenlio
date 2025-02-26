@@ -5,6 +5,18 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Sign Up | Document Scanner</title>
   <style>
+    :root {
+      --primary-color: #4a6fa5;
+      --primary-dark: #3a5a8c;
+      --secondary-color: #6c757d;
+      --success-color: #28a745;
+      --danger-color: #dc3545;
+      --light-gray: #f4f6f9;
+      --dark-gray: #343a40;
+      --border-color: #dee2e6;
+      --shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    }
+    
     * {
       margin: 0;
       padding: 0;
@@ -13,18 +25,20 @@
     }
     
     body {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      background-color: var(--light-gray);
       min-height: 100vh;
       display: flex;
       align-items: center;
       justify-content: center;
       padding: 20px;
+      color: #333;
+      line-height: 1.6;
     }
     
     .container {
       background-color: white;
-      border-radius: 10px;
-      box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+      border-radius: 0.25rem;
+      box-shadow: var(--shadow);
       width: 100%;
       max-width: 500px;
       overflow: hidden;
@@ -37,13 +51,13 @@
     }
     
     .header h1 {
-      color: #333;
+      color: var(--primary-color);
       font-size: 2rem;
       margin-bottom: 10px;
     }
     
     .header p {
-      color: #666;
+      color: var(--secondary-color);
       font-size: 0.9rem;
     }
     
@@ -62,7 +76,7 @@
     
     .form-group label {
       display: block;
-      color: #555;
+      color: var(--dark-gray);
       margin-bottom: 8px;
       font-weight: 500;
       font-size: 0.9rem;
@@ -70,34 +84,35 @@
     
     .form-group input {
       width: 100%;
-      padding: 12px 15px;
-      border: 1px solid #ddd;
-      border-radius: 6px;
+      padding: 0.375rem 0.75rem;
+      border: 1px solid var(--border-color);
+      border-radius: 0.25rem;
       font-size: 1rem;
-      transition: border 0.3s;
+      line-height: 1.5;
+      transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
     }
     
     .form-group input:focus {
-      border-color: #667eea;
-      outline: none;
+      border-color: var(--primary-color);
+      outline: 0;
+      box-shadow: 0 0 0 0.2rem rgba(74, 111, 165, 0.25);
     }
     
     .btn {
-      background: linear-gradient(to right, #667eea, #764ba2);
+      background-color: var(--primary-color);
       color: white;
       border: none;
-      border-radius: 6px;
-      padding: 12px 15px;
+      border-radius: 0.25rem;
+      padding: 0.375rem 0.75rem;
       width: 100%;
       font-size: 1rem;
       font-weight: 600;
       cursor: pointer;
-      transition: transform 0.2s, box-shadow 0.2s;
+      transition: background-color 0.2s;
     }
     
     .btn:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+      background-color: var(--primary-dark);
     }
     
     .btn:active {
@@ -108,11 +123,11 @@
       text-align: center;
       margin-top: 20px;
       font-size: 0.9rem;
-      color: #666;
+      color: var(--secondary-color);
     }
     
     .link a {
-      color: #667eea;
+      color: var(--primary-color);
       text-decoration: none;
       font-weight: 600;
     }
@@ -122,11 +137,11 @@
     }
     
     .error-message {
-      background-color: #ffe5e5;
-      color: #e74c3c;
-      padding: 12px;
-      border-radius: 6px;
+      color: white;
+      background-color: var(--danger-color);
+      padding: 0.75rem 1.25rem;
       margin-bottom: 20px;
+      border-radius: 0.25rem;
       font-size: 0.9rem;
       display: <%= message ? 'block' : 'none' %>;
     }
@@ -141,7 +156,7 @@
       top: 50%;
       transform: translateY(-50%);
       cursor: pointer;
-      color: #888;
+      color: var(--secondary-color);
       font-size: 0.9rem;
       user-select: none;
     }
@@ -153,28 +168,9 @@
       transition: all 0.3s;
     }
     
-    .requirements {
-      margin-top: 8px;
-      font-size: 0.8rem;
-      color: #666;
-    }
-    
-    .requirement {
-      display: flex;
-      align-items: center;
-      margin-bottom: 4px;
-    }
-    
-    .requirement.valid:before {
-      content: "✓";
-      color: #2ecc71;
-      margin-right: 5px;
-    }
-    
-    .requirement.invalid:before {
-      content: "✗";
-      color: #e74c3c;
-      margin-right: 5px;
+    .btn:disabled {
+      background-color: var(--secondary-color);
+      cursor: not-allowed;
     }
   </style>
 </head>
@@ -214,12 +210,6 @@
           <span class="toggle-password" id="toggle-password">Show</span>
         </div>
         <div class="password-strength" id="password-strength"></div>
-        <div class="requirements" id="password-requirements">
-          <div class="requirement invalid" id="length">At least 8 characters</div>
-          <div class="requirement invalid" id="uppercase">Contains uppercase letter</div>
-          <div class="requirement invalid" id="lowercase">Contains lowercase letter</div>
-          <div class="requirement invalid" id="number">Contains number</div>
-        </div>
       </div>
       
       <div class="form-group">
@@ -272,69 +262,18 @@
       const submitBtn = document.getElementById('submit-btn');
       
       passwordField.addEventListener('input', function() {
-        const password = passwordField.value;
-        let strength = 0;
-        
-        if (password.length >= 8) {
-          strength += 25;
-          lengthReq.classList.remove('invalid');
-          lengthReq.classList.add('valid');
-        } else {
-          lengthReq.classList.remove('valid');
-          lengthReq.classList.add('invalid');
-        }
-        
-        // Check uppercase
-        if (/[A-Z]/.test(password)) {
-          strength += 25;
-          uppercaseReq.classList.remove('invalid');
-          uppercaseReq.classList.add('valid');
-        } else {
-          uppercaseReq.classList.remove('valid');
-          uppercaseReq.classList.add('invalid');
-        }
-        
-        // Check lowercase
-        if (/[a-z]/.test(password)) {
-          strength += 25;
-          lowercaseReq.classList.remove('invalid');
-          lowercaseReq.classList.add('valid');
-        } else {
-          lowercaseReq.classList.remove('valid');
-          lowercaseReq.classList.add('invalid');
-        }
-        
-        // Check number
-        if (/[0-9]/.test(password)) {
-          strength += 25;
-          numberReq.classList.remove('invalid');
-          numberReq.classList.add('valid');
-        } else {
-          numberReq.classList.remove('valid');
-          numberReq.classList.add('invalid');
-        }
-        
-        // Update strength meter
-        passwordStrength.style.width = strength + '%';
-        
-        if (strength < 25) {
-          passwordStrength.style.backgroundColor = '#e74c3c'; // red
-        } else if (strength < 50) {
-          passwordStrength.style.backgroundColor = '#e67e22'; // orange
-        } else if (strength < 75) {
-          passwordStrength.style.backgroundColor = '#f1c40f'; // yellow
-        } else {
-          passwordStrength.style.backgroundColor = '#2ecc71'; // green
-        }
-        
-        // Check if all requirements are met
-        const allValid = password.length >= 8 && 
-                         /[A-Z]/.test(password) && 
-                         /[a-z]/.test(password) && 
-                         /[0-9]/.test(password);
-        
-        submitBtn.disabled = !allValid;
-      });
+  const password = passwordField.value;
+  
+  // Simple check if password exists
+  if (password.length > 4) {
+    passwordStrength.style.width = '100%';
+    passwordStrength.style.backgroundColor = 'var(--success-color)';
+    submitBtn.disabled = false;
+  } else {
+    passwordStrength.style.width = '0%';
+    submitBtn.disabled = true;
+  }
+});
       
       // Form validation
       const signupForm = document.getElementById('signup-form');
