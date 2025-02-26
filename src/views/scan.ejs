@@ -1,0 +1,28 @@
+<div class="container-scan">
+  <div class="card-scan">
+      <h2>File Details</h2>
+      <p><strong>Filename:</strong> <%= file.filename %></p>
+      <p><strong>Mimetype:</strong> <%= file.mimetype %></p>
+      <p><strong>Size:</strong> <%= file.size %> bytes</p>
+      <p><strong>Uploaded At:</strong> <%= file.uploaded_at %></p>
+  </div>
+  <h2>Similar Files</h2>
+  <table>
+      <tr>
+          <th>Filename</th>
+          <th>Mimetype</th>
+          <th>Size</th>
+          <th>Uploaded At</th>
+          <th>Similarity Score</th>
+      </tr>
+      <% matches.forEach(match => { %>
+      <tr>
+          <td><%= match.filename %></td>
+          <td><%= match.mimetype %></td>
+          <td><%= match.size %> bytes</td>
+          <td><%= match.uploaded_at %></td>
+          <td><%= match.similarity_score.toFixed(2) %></td>
+      </tr>
+      <% }); %>
+  </table>
+</div>

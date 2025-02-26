@@ -24,9 +24,12 @@ const dropzone = document.getElementById('dropzone')
 const fileInput = document.getElementById('fileInput')
 const fileSelect = document.getElementById('fileSelect')
 const uploadBtn = document.getElementById('uploadBtn')
+const scanBtn = document.createElement('button') // Create Scan button dynamically
 
 let selectedFile = null
+let uploadedFileId = null // Store file ID after upload
 
+// Dropzone Click -> Opens File Selector
 dropzone.addEventListener('click', () => fileInput.click())
 
 dropzone.addEventListener('dragover', (e) => {
@@ -67,15 +70,76 @@ uploadBtn.addEventListener('click', async () => {
       body: formData,
     })
 
+    const data = await response.json()
+
     if (response.ok) {
-      alert('File uploaded successfully!')
+      uploadedFileId = data.fileId
+      alert('✅ File uploaded successfully!')
+
+      scanBtn.id = 'scanBtn'
+      scanBtn.textContent = '🔍 Scan for Similar Documents'
+      scanBtn.classList.add('scan-btn')
+      document.querySelector('.upload-container').appendChild(scanBtn)
+      scanBtn.style.display = 'block'
     }
     else {
-      alert('Failed to upload file.')
+      alert(data.error || '❌ Failed to upload file.')
     }
   }
   catch (error) {
     console.warn(error)
-    alert('Error uploading file.')
+    alert('⚠️ Error uploading file.')
+  }
+})
+
+scanBtn.addEventListener('click', async () => {
+  if (!uploadedFileId)
+    return
+
+  scanBtn.textContent = 'Scanning...'
+  scanBtn.classList.add('loading')
+  scanBtn.disabled = true
+
+  try {
+    const response = await fetch(`/compare/${uploadedFileId}`, {
+      method: 'POST',
+    })
+
+    if (response.ok) {
+      alert('✅ Scan Completed!')
+      window.location.href = `/scans/${uploadedFileId}`
+    }
+    else {
+      alert('❌ Failed to scan document.')
+    }
+  }
+  catch (error) {
+    console.error(error)
+    alert('⚠️ Error scanning document.')
+  }
+  finally {
+    scanBtn.textContent = '🔍 Scan for Similar Documents'
+    scanBtn.classList.remove('loading')
+    scanBtn.disabled = false
+  }
+})
+
+scanBtn.addEventListener('click', async () => {
+  if (!uploadedFileId)
+    return
+
+  try {
+    const response = await fetch(`/compare/${uploadedFileId}`, { method: 'POST' })
+    if (response.ok) {
+      alert('Scan completed! Redirecting...')
+      window.location.href = `/scans/${uploadedFileId}`
+    }
+    else {
+      alert('Failed to scan documents.')
+    }
+  }
+  catch (error) {
+    console.error(error)
+    alert('Error scanning documents.')
   }
 })

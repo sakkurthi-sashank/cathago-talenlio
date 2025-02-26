@@ -352,3 +352,59 @@ header svg {
     background-color: #f0f0f0;
     border-radius: 4px;
   }
+
+  .scan-btn {
+    display: none; /* Initially hidden */
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 12px 18px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: background 0.3s ease-in-out, transform 0.2s;
+  }
+  
+  .scan-btn:hover {
+    background-color: #0056b3;
+    transform: scale(1.05);
+  }
+  
+  .scan-btn:active {
+    transform: scale(0.95);
+  }
+  
+  .scan-btn.loading {
+    background-color: #28a745;
+    cursor: not-allowed;
+  }
+  
+.container-scan {
+    max-width: 800px;
+    margin: auto;
+    background: white;
+    padding: 20px;
+    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+    border-radius: 5px;
+}
+.card-scan {
+    padding: 20px;
+    background: #007bff;
+    color: white;
+    border-radius: 5px;
+    margin-bottom: 20px;
+}
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+th, td {
+    padding: 10px;
+    border: 1px solid #ddd;
+    text-align: left;
+}
+th {
+    background-color: #007bff;
+    color: white;
+}
