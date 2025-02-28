@@ -209,7 +209,6 @@ h1 {
             .then(data => {
                 if (data.message) {
                     alert(data.message);
-                    // Update the role display without refreshing
                     const roleSpan = roleSelect.closest('tr').querySelector('.role');
                     roleSpan.textContent = newRole;
                     roleSpan.className = `role ${newRole}`;

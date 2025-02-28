@@ -175,7 +175,7 @@ function isAuthenticated(req: Request, res: Response, next: NextFunction): void 
   res.redirect('/login')
 }
 
-async function isAdmin(req: Request, res: Response, next: NextFunction): void {
+async function isAdmin(req: Request, res: Response, next: NextFunction): Promise<void> {
   const db = await initDb()
 
   if (!req.session.user) {
