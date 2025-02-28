@@ -24,6 +24,11 @@ Each user has a daily limit of 20 free scans, with the ability to request additi
 - **Database**: SQLite
 - **Text Analysis**: Custom algorithm using Levenshtein distance and word frequency
 
+## Video
+
+
+https://github.com/user-attachments/assets/055ed0c6-4660-448b-9c17-b6b62427b9c4
+
 ## Screenshots
 
 ### User Authentication
