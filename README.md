@@ -24,6 +24,11 @@ Each user has a daily limit of 20 free scans, with the ability to request additi
 - **Database**: SQLite
 - **Text Analysis**: Custom algorithm using Levenshtein distance and word frequency
 
+## Admin Access
+
+- email: sakkurthisashank@gmail.com
+- password: Sashank@9490
+
 ## Video
 
 
