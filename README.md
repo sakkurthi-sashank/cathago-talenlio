@@ -65,15 +65,8 @@ cd cathago-talenlio
 # Install dependencies
 npm install
 
-# Set up environment variables
-cp .env.example .env
-# Edit .env file with your configuration
-
-# Initialize the database
-npm run init-db
-
 # Start the application
-npm start
+npm run start
 ```
 
 ## Usage
