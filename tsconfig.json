@@ -1,5 +1,7 @@
 {
   "compilerOptions": {
+    "outDir": "dist",
+    "rootDir": "src",
     "target": "ESNext",
     "lib": ["ESNext"],
     "module": "ESNext",
@@ -11,5 +13,7 @@
     "esModuleInterop": true,
     "skipDefaultLibCheck": true,
     "skipLibCheck": true
-  }
+  },
+  "include": ["src/**/*", "express-session.d.ts"],
+  "exclude": ["node_modules", "dist"]
 }
