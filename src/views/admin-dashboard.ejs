@@ -1,153 +1,193 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard - User Management</title>
-    <link rel="stylesheet" href="/css/admin-dashboard.css">
+    <link rel="stylesheet" href="/global.css">
 </head>
+
 <body>
-  <style>
-  * {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-}
+    <style>
+        .navbar {
+            background-color: white;
+            box-shadow: var(--shadow);
+            padding: 0.75rem 0;
+            margin-bottom: 1.5rem;
+            width: 100%;
+        }
 
-body {
-    font-family: Arial, sans-serif;
-    background-color: #f7f8fc;
-    color: #333;
-    line-height: 1.6;
-}
+        .navbar-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
 
-.container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 20px;
-}
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--primary-color);
+            text-decoration: none;
+        }
 
-h1 {
-    margin-bottom: 20px;
-    color: #333;
-}
+        .nav-menu {
+            display: flex;
+            gap: 1.5rem;
+            list-style: none;
+        }
 
-.card {
-    background-color: #fff;
-    border-radius: 8px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-    margin-bottom: 20px;
-    overflow: hidden;
-}
+        .nav-link {
+            color: var(--secondary-color);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
 
-.card-header {
-    padding: 15px 20px;
-    border-bottom: 1px solid #eee;
-}
+        .nav-link:hover {
+            color: var(--primary-color);
+        }
 
-.card-header h2 {
-    font-size: 18px;
-    font-weight: 600;
-}
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1rem;
+        }
 
-.card-content {
-    padding: 20px;
-    overflow-x: auto;
-}
+        h1 {
+            margin-bottom: 20px;
+            color: #333;
+        }
 
-.user-table {
-    width: 100%;
-    border-collapse: collapse;
-}
+        .card {
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            margin-bottom: 20px;
+            overflow: hidden;
+            min-height: 100vh;
+        }
 
-.user-table th,
-.user-table td {
-    padding: 12px 15px;
-    text-align: left;
-    border-bottom: 1px solid #eee;
-}
+        .card-header {
+            padding: 15px 20px;
+            border-bottom: 1px solid #eee;
+        }
 
-.user-table th {
-    font-weight: 600;
-    color: #555;
-    background-color: #f9f9f9;
-}
+        .card-header h2 {
+            font-size: 18px;
+            font-weight: 600;
+        }
 
-.user-table tbody tr:hover {
-    background-color: #f8f9fd;
-}
+        .card-content {
+            padding: 20px;
+            overflow-x: auto;
+        }
 
-.role {
-    display: inline-block;
-    padding: 4px 8px;
-    border-radius: 4px;
-    font-size: 14px;
-    font-weight: 500;
-}
+        .user-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
 
-.role.admin {
-    background-color: #e3f2fd;
-    color: #1976d2;
-}
+        .user-table th,
+        .user-table td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
 
-.role.user {
-    background-color: #e8f5e9;
-    color: #43a047;
-}
+        .user-table th {
+            font-weight: 600;
+            color: #555;
+            background-color: #f9f9f9;
+        }
 
-.credits {
-    font-weight: 500;
-}
+        .user-table tbody tr:hover {
+            background-color: #f8f9fd;
+        }
 
-.actions {
-    display: flex;
-    gap: 10px;
-    align-items: center;
-}
+        .role {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: 500;
+        }
 
-.role-select {
-    padding: 6px 10px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    background-color: #fff;
-    cursor: pointer;
-    font-size: 14px;
-}
+        .role.admin {
+            background-color: #e3f2fd;
+            color: #1976d2;
+        }
 
-.btn-update {
-    padding: 6px 12px;
-    background-color: #4a6da7;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 14px;
-    transition: background-color 0.2s;
-}
+        .role.user {
+            background-color: #e8f5e9;
+            color: #43a047;
+        }
 
-.btn-update:hover {
-    background-color: #385790;
-}
+        .credits {
+            font-weight: 500;
+        }
 
-@media (max-width: 768px) {
-    .actions {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 5px;
-    }
-    
-    .user-table {
-        font-size: 14px;
-    }
-    
-    .card-content {
-        padding: 10px;
-    }
-}
-</style>
+        .actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .role-select {
+            padding: 6px 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background-color: #fff;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .btn-update {
+            padding: 6px 12px;
+            background-color: #4a6da7;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.2s;
+        }
+
+        .btn-update:hover {
+            background-color: #385790;
+        }
+
+        @media (max-width: 768px) {
+            .actions {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 5px;
+            }
+
+            .user-table {
+                font-size: 14px;
+            }
+
+            .card-content {
+                padding: 10px;
+            }
+        }
+    </style>
+    <nav class="navbar">
+        <div class="container navbar-content">
+            <a href="/" class="logo">Cathago | Talenlio</a>
+            <ul class="nav-menu">
+                <li><a href="/admin/user-management" class="nav-link">Dashboard</a></li>
+                <li><a href="/admin/credit-requests" class="nav-link">Credit Requests</a></li>
+                <li><a href="/admin/analytics" class="nav-link">Analytics</a></li>
+                <li><a href="/auth/logout" class="nav-link">Logout</a></li>
+            </ul>
+        </div>
+    </nav>
     <div class="container">
         <h1>User Management</h1>
-        
+
         <div class="card">
             <div class="card-header">
                 <h2>All Users</h2>
@@ -165,28 +205,42 @@ h1 {
                         </tr>
                     </thead>
                     <tbody>
-                        <% users.forEach(user => { %>
+                        <% users.forEach(user=> { %>
                             <tr>
-                                <td><%= user.id %></td>
-                                <td><%= user.firstname %> <%= user.lastname %></td>
-                                <td><%= user.email %></td>
                                 <td>
-                                    <span class="credits"><%= user.credits %></span>
+                                    <%= user.id %>
                                 </td>
                                 <td>
-                                    <span class="role <%= user.role %>"><%= user.role %></span>
+                                    <%= user.firstname %>
+                                        <%= user.lastname %>
+                                </td>
+                                <td>
+                                    <%= user.email %>
+                                </td>
+                                <td>
+                                    <span class="credits">
+                                        <%= user.credits %>
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="role <%= user.role %>">
+                                        <%= user.role %>
+                                    </span>
                                 </td>
                                 <td>
                                     <div class="actions">
                                         <select id="role-<%= user.id %>" class="role-select">
-                                            <option value="user" <%= user.role === 'user' ? 'selected' : '' %>>User</option>
-                                            <option value="admin" <%= user.role === 'admin' ? 'selected' : '' %>>Admin</option>
+                                            <option value="user" <%=user.role==='user' ? 'selected' : '' %>>User
+                                            </option>
+                                            <option value="admin" <%=user.role==='admin' ? 'selected' : '' %>>Admin
+                                            </option>
                                         </select>
-                                        <button onclick="updateUserRole(<%= user.id %>)" class="btn-update">Update Role</button>
+                                        <button onclick="updateUserRole(<%= user.id %>)" class="btn-update">Update
+                                            Role</button>
                                     </div>
                                 </td>
                             </tr>
-                        <% }); %>
+                            <% }); %>
                     </tbody>
                 </table>
             </div>
@@ -197,7 +251,7 @@ h1 {
         function updateUserRole(userId) {
             const roleSelect = document.getElementById(`role-${userId}`);
             const newRole = roleSelect.value;
-            
+
             fetch(`/admin/user/${userId}/role`, {
                 method: 'POST',
                 headers: {
@@ -205,22 +259,23 @@ h1 {
                 },
                 body: JSON.stringify({ role: newRole }),
             })
-            .then(response => response.json())
-            .then(data => {
-                if (data.message) {
-                    alert(data.message);
-                    const roleSpan = roleSelect.closest('tr').querySelector('.role');
-                    roleSpan.textContent = newRole;
-                    roleSpan.className = `role ${newRole}`;
-                } else {
-                    alert('Error: ' + (data.error || 'Unknown error'));
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('Failed to update role. Please try again.');
-            });
+                .then(response => response.json())
+                .then(data => {
+                    if (data.message) {
+                        alert(data.message);
+                        const roleSpan = roleSelect.closest('tr').querySelector('.role');
+                        roleSpan.textContent = newRole;
+                        roleSpan.className = `role ${newRole}`;
+                    } else {
+                        alert('Error: ' + (data.error || 'Unknown error'));
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Failed to update role. Please try again.');
+                });
         }
     </script>
 </body>
+
 </html>

@@ -1,70 +1,42 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Login | Document Scanner</title>
+  <link rel="stylesheet" href="/global.css">
+  <title>Login</title>
   <style>
-    :root {
-      --primary-color: #4a6fa5;
-      --primary-dark: #3a5a8c;
-      --secondary-color: #6c757d;
-      --success-color: #28a745;
-      --danger-color: #dc3545;
-      --light-gray: #f4f6f9;
-      --dark-gray: #343a40;
-      --border-color: #dee2e6;
-      --shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
-    }
-    
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    }
-    
-    body {
-      background-color: var(--light-gray);
-      height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-      color: #333;
-      line-height: 1.6;
-    }
-    
     .container {
       background-color: white;
       border-radius: 0.25rem;
       box-shadow: var(--shadow);
       width: 100%;
-      max-width: 400px;
+      max-width: 500px;
       overflow: hidden;
       padding: 40px;
     }
-    
+
     .header {
       text-align: center;
       margin-bottom: 30px;
     }
-    
+
     .header h1 {
       color: var(--primary-color);
       font-size: 2rem;
       margin-bottom: 10px;
     }
-    
+
     .header p {
       color: var(--secondary-color);
       font-size: 0.9rem;
     }
-    
+
     .form-group {
       margin-bottom: 20px;
     }
-    
+
     .form-group label {
       display: block;
       color: var(--dark-gray);
@@ -72,7 +44,7 @@
       font-weight: 500;
       font-size: 0.9rem;
     }
-    
+
     .form-group input {
       width: 100%;
       padding: 0.375rem 0.75rem;
@@ -82,13 +54,13 @@
       line-height: 1.5;
       transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
     }
-    
+
     .form-group input:focus {
       border-color: var(--primary-color);
       outline: 0;
       box-shadow: 0 0 0 0.2rem rgba(74, 111, 165, 0.25);
     }
-    
+
     .btn {
       background-color: var(--primary-color);
       color: white;
@@ -101,32 +73,32 @@
       cursor: pointer;
       transition: background-color 0.2s;
     }
-    
+
     .btn:hover {
       background-color: var(--primary-dark);
     }
-    
+
     .btn:active {
       transform: translateY(1px);
     }
-    
+
     .link {
       text-align: center;
       margin-top: 20px;
       font-size: 0.9rem;
       color: var(--secondary-color);
     }
-    
+
     .link a {
       color: var(--primary-color);
       text-decoration: none;
       font-weight: 600;
     }
-    
+
     .link a:hover {
       text-decoration: underline;
     }
-    
+
     .error-message {
       color: white;
       background-color: var(--danger-color);
@@ -135,11 +107,11 @@
       border-radius: 0.25rem;
       font-size: 0.9rem;
     }
-    
+
     .password-wrapper {
       position: relative;
     }
-    
+
     .toggle-password {
       position: absolute;
       right: 12px;
@@ -152,23 +124,24 @@
     }
   </style>
 </head>
+
 <body>
   <div class="container">
     <div class="header">
       <h1>Welcome Back</h1>
-      <p>Sign in to access your document scanner</p>
+      <p>Sign in to access your Cathago Dashboard</p>
     </div>
-    
+
     <div class="error-message" id="error-message" style="display: <%= message ? 'block' : 'none' %>;">
-        <%= message %>
+      <%= message %>
     </div>
-    
-    <form action="/login" method="POST" id="login-form">
+
+    <form action="/auth/login" method="POST" id="login-form">
       <div class="form-group">
         <label for="email">Email Address</label>
         <input type="email" id="email" name="email" placeholder="Enter your email" required>
       </div>
-      
+
       <div class="form-group">
         <label for="password">Password</label>
         <div class="password-wrapper">
@@ -176,22 +149,21 @@
           <span class="toggle-password" id="toggle-password">Show</span>
         </div>
       </div>
-      
+
       <button type="submit" class="btn">Sign In</button>
     </form>
-    
+
     <div class="link">
-      Don't have an account? <a href="/signup">Sign Up</a>
+      Don't have an account? <a href="/auth/signup">Sign Up</a>
     </div>
   </div>
-  
+
   <script>
-    document.addEventListener('DOMContentLoaded', function() {
-      // Password toggle functionality
+    document.addEventListener('DOMContentLoaded', function () {
       const togglePassword = document.getElementById('toggle-password');
       const passwordField = document.getElementById('password');
-      
-      togglePassword.addEventListener('click', function() {
+
+      togglePassword.addEventListener('click', function () {
         if (passwordField.type === 'password') {
           passwordField.type = 'text';
           togglePassword.textContent = 'Hide';
@@ -200,37 +172,34 @@
           togglePassword.textContent = 'Show';
         }
       });
-      
-      // Form validation
+
       const loginForm = document.getElementById('login-form');
       const emailField = document.getElementById('email');
       const errorMessage = document.getElementById('error-message');
-      
-      loginForm.addEventListener('submit', function(e) {
+
+      loginForm.addEventListener('submit', function (e) {
         let isValid = true;
-        
-        // Basic email validation
+
         if (!isValidEmail(emailField.value)) {
           showError('Please enter a valid email address');
           isValid = false;
         }
-        
-        // Password length validation
+
         if (passwordField.value.length < 6) {
           showError('Password must be at least 6 characters');
           isValid = false;
         }
-        
+
         if (!isValid) {
           e.preventDefault();
         }
       });
-      
+
       function isValidEmail(email) {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         return emailRegex.test(email);
       }
-      
+
       function showError(message) {
         errorMessage.textContent = message;
         errorMessage.style.display = 'block';
@@ -238,4 +207,5 @@
     });
   </script>
 </body>
+
 </html>
